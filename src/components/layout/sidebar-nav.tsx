@@ -15,20 +15,15 @@ import {
   Settings,
   UserCircle,
   LogOut,
-  Video,
+  MonitorPlay,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { usePathname } from 'next/navigation';
 
 export function SidebarNav() {
   const { toast } = useToast();
-
-  const handleNavClick = (feature: string) => {
-    toast({
-      title: 'Navigation',
-      description: `Navigating to ${feature}.`,
-    });
-  };
+  const pathname = usePathname();
 
   const handleActionClick = (action: string) => {
     toast({
@@ -53,28 +48,27 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              href="#"
-              isActive
-              onClick={() => handleNavClick('Dashboard')}
+              href="/"
+              isActive={pathname === '/'}
             >
               <Home />
               Dashboard
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => handleNavClick('Live Feeds')}>
-              <Video />
-              Live Feeds
+            <SidebarMenuButton href="/cctv" isActive={pathname === '/cctv'}>
+              <MonitorPlay />
+              CCTV Footage
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => handleNavClick('Analytics')}>
+            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Analytics' })}>
               <BarChart3 />
               Analytics
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => handleNavClick('Settings')}>
+            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Settings' })}>
               <Settings />
               Settings
             </SidebarMenuButton>
@@ -85,7 +79,7 @@ export function SidebarNav() {
         <Separator className="mb-2" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => handleNavClick('Profile')}>
+            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Profile' })}>
               <UserCircle />
               Profile
             </SidebarMenuButton>

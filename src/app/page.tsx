@@ -5,16 +5,8 @@ import {
 } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import DashboardClient from './dashboard-client';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarNav />
-      </Sidebar>
-      <SidebarInset>
-        <DashboardClient />
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  redirect('/dashboard');
 }
