@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { PeopleCountChart } from '@/components/cctv/people-count-chart';
-import { Upload, Play, Pause, StopCircle, Users, Signal, ShieldAlert } from 'lucide-react';
+import { Upload, Play, Pause, StopCircle, Users, Signal, ShieldAlert, ScanLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeCctvFrame, AnalyzeCctvFrameOutput } from '@/ai/flows/analyze-cctv-frame';
 import { Slider } from '@/components/ui/slider';
@@ -53,7 +53,6 @@ export default function CctvClient() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
@@ -79,8 +78,15 @@ export default function CctvClient() {
     }
   };
 
-  const captureFrame = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const handleAnalyzeFrame = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current) {
+        toast({
+            variant: 'destructive',
+            title: 'Analysis Failed',
+            description: 'Video not ready for analysis.',
+        });
+        return;
+    }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -92,30 +98,28 @@ export default function CctvClient() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const frameDataUrl = canvas.toDataURL('image/jpeg');
 
+    toast({
+      title: 'Analyzing Frame...',
+      description: 'Please wait while the AI processes the video frame.',
+    });
+
     try {
       const result = await analyzeCctvFrame({ videoFrame: frameDataUrl, thresholds });
       setAnalysisResult(result);
       setPeopleCountHistory(prev => [...prev, { time: video.currentTime, count: result.peopleCount }].slice(-50));
+      toast({
+        title: 'Analysis Complete',
+        description: `Found ${result.peopleCount} people. Density is ${result.densityLevel}.`,
+      });
     } catch (error) {
       console.error("Frame analysis failed:", error);
-      // Don't toast on every frame failure to avoid spamming user
+      toast({
+        variant: 'destructive',
+        title: 'Analysis Failed',
+        description: 'Could not analyze the video frame.',
+      });
     }
-  }, [thresholds]);
-
-  useEffect(() => {
-    if (isPlaying && videoRef.current) {
-      intervalRef.current = setInterval(captureFrame, 1000); // Analyze every second
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying, captureFrame]);
+  }, [thresholds, toast]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -132,7 +136,6 @@ export default function CctvClient() {
     videoRef.current.pause();
     videoRef.current.currentTime = 0;
     setIsPlaying(false);
-    if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
   const config = analysisResult ? statusConfig[analysisResult.densityLevel as AlertStatus] : statusConfig['Normal'];
@@ -182,6 +185,9 @@ export default function CctvClient() {
                   <StopCircle className="mr-2 h-4 w-4" /> Stop
                 </Button>
               </div>
+              <Button onClick={handleAnalyzeFrame} disabled={!videoUrl}>
+                <ScanLine className="mr-2 h-4 w-4" /> Analyze Frame
+              </Button>
             </CardContent>
           </Card>
            <Card>
@@ -231,3 +237,5 @@ export default function CctvClient() {
     </div>
   );
 }
+
+    
