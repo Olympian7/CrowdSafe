@@ -20,6 +20,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export function SidebarNav() {
   const { toast } = useToast();
@@ -47,31 +48,44 @@ export function SidebarNav() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              href="/dashboard"
-              isActive={pathname === '/dashboard'}
-            >
-              <Home />
-              Dashboard
-            </SidebarMenuButton>
+            <Link href="/dashboard" passHref>
+              <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
+                <>
+                  <Home />
+                  Dashboard
+                </>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="/cctv" isActive={pathname === '/cctv'}>
-              <MonitorPlay />
-              CCTV Footage
-            </SidebarMenuButton>
+            <Link href="/cctv" passHref>
+              <SidebarMenuButton asChild isActive={pathname === '/cctv'}>
+                <>
+                  <MonitorPlay />
+                  CCTV Footage
+                </>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="/analytics" isActive={pathname === '/analytics'}>
-              <BarChart3 />
-              Analytics
-            </SidebarMenuButton>
+            <Link href="/analytics" passHref>
+              <SidebarMenuButton asChild isActive={pathname === '/analytics'}>
+                <>
+                  <BarChart3 />
+                  Analytics
+                </>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="/settings" isActive={pathname === '/settings'}>
-              <Settings />
-              Settings
-            </SidebarMenuButton>
+            <Link href="/settings" passHref>
+              <SidebarMenuButton asChild isActive={pathname === '/settings'}>
+                <>
+                  <Settings />
+                  Settings
+                </>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
@@ -79,10 +93,14 @@ export function SidebarNav() {
         <Separator className="mb-2" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton href="/profile" isActive={pathname === '/profile'}>
-              <UserCircle />
-              Profile
-            </SidebarMenuButton>
+            <Link href="/profile" passHref>
+              <SidebarMenuButton asChild isActive={pathname === '/profile'}>
+                <>
+                  <UserCircle />
+                  Profile
+                </>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton href="#" onClick={() => handleActionClick('Logout')}>
