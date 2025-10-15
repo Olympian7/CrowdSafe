@@ -32,7 +32,7 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
     if (videoRef.current && !hasAnalyzed.current) {
       hasAnalyzed.current = true;
       // Ensure video is seekable and has data
-      if (videoRef.current.readyState >= 2) {
+      if (videoRef.current.readyState >= 1) { // 1: HAVE_METADATA is enough
         const canvas = document.createElement('canvas');
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;

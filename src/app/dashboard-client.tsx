@@ -21,6 +21,7 @@ import {
 } from '@/ai/flows/analyze-crowd-video';
 import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDebounce } from '@/hooks/use-debounce';
 
 
 export type AlertStatus = 'Normal' | 'Caution' | 'Warning' | 'Critical';
@@ -34,6 +35,7 @@ const objectTrackingData = JSON.stringify([
 export default function DashboardClient() {
   const [currentDensity, setCurrentDensity] = useState(45);
   const [densityThreshold, setDensityThreshold] = useState(60);
+  const debouncedDensityThreshold = useDebounce(densityThreshold, 500);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [alertInfo, setAlertInfo] = useState<AdjustAlertThresholdsOutput>({
     alertMessage: 'Loading...',
@@ -50,28 +52,17 @@ export default function DashboardClient() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDensity(prev => {
-        const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        const newDensity = prev + change;
-        return Math.max(0, Math.min(100, newDensity)); // Clamp between 0 and 100
-      });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     async function getAlerts() {
         setIsLoadingAlert(true);
       const res = await adjustAlertThresholds({
-        crowdDensityThreshold: densityThreshold,
+        crowdDensityThreshold: debouncedDensityThreshold,
         currentCrowdDensity: currentDensity,
       });
       setAlertInfo(res);
       setIsLoadingAlert(false);
     }
     getAlerts();
-  }, [currentDensity, densityThreshold]);
+  }, [currentDensity, debouncedDensityThreshold]);
 
   useEffect(() => {
     async function getSummary() {
