@@ -15,7 +15,7 @@ import {
 import {
     analyzeCrowdVideo,
 } from '@/ai/flows/analyze-crowd-video';
-import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
+import { Users, AlertTriangle, Route, Shield, Maximize } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -40,6 +40,7 @@ export default function DashboardClient() {
   const [densityThreshold, setDensityThreshold] = useState(60);
   const debouncedDensityThreshold = useDebounce(densityThreshold, 500);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [estimatedArea, setEstimatedArea] = useState(0);
   const [alertInfo, setAlertInfo] = useState<AdjustAlertThresholdsOutput>({
     alertMessage: 'System is operating normally.',
     crowdStatusLevel: 'Normal',
@@ -118,6 +119,7 @@ export default function DashboardClient() {
     });
     try {
       const result = await analyzeCrowdVideo({ videoFrame });
+      setEstimatedArea(result.estimatedArea);
       toast({
         title: 'Analysis Complete',
         description: (
@@ -202,14 +204,14 @@ export default function DashboardClient() {
           status={alertInfo.crowdStatusLevel as AlertStatus}
         />
         <StatCard
+          title="Estimated Area"
+          value={`${estimatedArea} m²`}
+          icon={<Maximize className="text-accent-foreground" />}
+        />
+        <StatCard
           title="Risk Areas"
           value={behaviorSummary.riskAreas.length}
           icon={<AlertTriangle className="text-accent-foreground" />}
-        />
-        <StatCard
-          title="Common Flows"
-          value={behaviorSummary.commonMovementFlows.length}
-          icon={<Route className="text-accent-foreground" />}
         />
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
