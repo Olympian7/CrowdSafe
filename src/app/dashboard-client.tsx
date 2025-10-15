@@ -9,10 +9,6 @@ import { DensityChart } from '@/components/dashboard/density-chart';
 import { ObjectTracking } from '@/components/dashboard/object-tracking';
 import { UploadDialog } from '@/components/dashboard/upload-dialog';
 import {
-  adjustAlertThresholds,
-  AdjustAlertThresholdsOutput,
-} from '@/ai/flows/adjust-alert-thresholds';
-import {
   summarizeCrowdBehavior,
   SummarizeCrowdBehaviorOutput,
 } from '@/ai/flows/summarize-crowd-behavior';
@@ -33,13 +29,19 @@ const objectTrackingData = JSON.stringify([
     { id: 3, timestamps: [{ t: 0, x: 100, y: 120 }, { t: 5, x: 100, y: 125 }] },
 ]);
 
+type AdjustAlertThresholdsOutput = {
+  alertMessage: string;
+  crowdStatusLevel: AlertStatus;
+}
+
+
 export default function DashboardClient() {
   const [currentDensity, setCurrentDensity] = useState(45);
   const [densityThreshold, setDensityThreshold] = useState(60);
   const debouncedDensityThreshold = useDebounce(densityThreshold, 500);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [alertInfo, setAlertInfo] = useState<AdjustAlertThresholdsOutput>({
-    alertMessage: 'Loading...',
+    alertMessage: 'System is operating normally.',
     crowdStatusLevel: 'Normal',
   });
   const [behaviorSummary, setBehaviorSummary] =
@@ -55,17 +57,34 @@ export default function DashboardClient() {
   const { toast } = useToast();
 
   useEffect(() => {
-    async function getAlerts() {
-        setIsLoadingAlert(true);
-      const res = await adjustAlertThresholds({
-        crowdDensityThreshold: debouncedDensityThreshold,
-        currentCrowdDensity: currentDensity,
-      });
-      setAlertInfo(res);
-      setIsLoadingAlert(false);
-    }
-    getAlerts();
+    setIsLoadingAlert(true);
+    const getAlerts = () => {
+        let crowdStatusLevel: AlertStatus;
+        let alertMessage: string;
+
+        if (currentDensity < debouncedDensityThreshold - 25) {
+            crowdStatusLevel = 'Normal';
+            alertMessage = `Crowd density is low (${currentDensity}%), well below the threshold.`;
+        } else if (currentDensity < debouncedDensityThreshold) {
+            crowdStatusLevel = 'Caution';
+            alertMessage = `Crowd density is at ${currentDensity}%, approaching the threshold of ${debouncedDensityThreshold}%.`;
+        } else if (currentDensity < debouncedDensityThreshold + 25) {
+            crowdStatusLevel = 'Warning';
+            alertMessage = `Warning: Crowd density is at ${currentDensity}%, exceeding the threshold of ${debouncedDensityThreshold}%.`;
+        } else {
+            crowdStatusLevel = 'Critical';
+            alertMessage = `Critical Alert: Crowd density is high at ${currentDensity}%, significantly above the threshold.`;
+        }
+
+        setAlertInfo({ crowdStatusLevel, alertMessage });
+        setIsLoadingAlert(false);
+    };
+
+    const timer = setTimeout(getAlerts, 500); 
+
+    return () => clearTimeout(timer);
   }, [currentDensity, debouncedDensityThreshold]);
+
 
   useEffect(() => {
     async function getSummary() {
@@ -136,7 +155,6 @@ export default function DashboardClient() {
 
   useEffect(() => {
     const getCameraPermission = async () => {
-      // Only request permission if no video is uploaded and permission isn't already known
       if (videoUrl === null && hasCameraPermission === null) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -158,7 +176,6 @@ export default function DashboardClient() {
 
     getCameraPermission();
 
-    // Cleanup function to stop camera stream
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
