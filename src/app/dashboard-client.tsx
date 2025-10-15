@@ -7,6 +7,7 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { ControlPanel } from '@/components/dashboard/control-panel';
 import { DensityChart } from '@/components/dashboard/density-chart';
 import { ObjectTracking } from '@/components/dashboard/object-tracking';
+import { UploadDialog } from '@/components/dashboard/upload-dialog';
 import {
   adjustAlertThresholds,
   AdjustAlertThresholdsOutput,
@@ -16,6 +17,8 @@ import {
   SummarizeCrowdBehaviorOutput,
 } from '@/ai/flows/summarize-crowd-behavior';
 import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
 
 export type AlertStatus = 'Normal' | 'Caution' | 'Warning' | 'Critical';
 
@@ -38,7 +41,9 @@ export default function DashboardClient() {
       riskAreas: [],
       commonMovementFlows: [],
     });
-    const [isLoadingAlert, setIsLoadingAlert] = useState(true);
+  const [isLoadingAlert, setIsLoadingAlert] = useState(true);
+  const [isUploadOpen, setUploadOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,10 +76,19 @@ export default function DashboardClient() {
     }
     getSummary();
   }, []);
+  
+  const handleFileUpload = (file: File) => {
+    toast({
+        title: 'Upload Successful',
+        description: `${file.name} has been uploaded for processing.`,
+    });
+    setUploadOpen(false);
+  };
 
   return (
+    <>
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <DashboardHeader />
+      <DashboardHeader onUploadClick={() => setUploadOpen(true)} />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Current Density"
@@ -121,5 +135,11 @@ export default function DashboardClient() {
         </div>
       </div>
     </div>
+    <UploadDialog
+        isOpen={isUploadOpen}
+        onOpenChange={setUploadOpen}
+        onFileUpload={handleFileUpload}
+      />
+    </>
   );
 }

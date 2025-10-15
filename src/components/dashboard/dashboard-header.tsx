@@ -14,7 +14,11 @@ import {
 
 const avatarImage = PlaceHolderImages.find(img => img.id === 'user-avatar-1');
 
-export function DashboardHeader() {
+type DashboardHeaderProps = {
+    onUploadClick: () => void;
+};
+
+export function DashboardHeader({ onUploadClick }: DashboardHeaderProps) {
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -37,7 +41,7 @@ export function DashboardHeader() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Button>
+        <Button onClick={onUploadClick}>
           <FileUp />
           Upload Video
         </Button>
