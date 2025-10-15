@@ -9,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const AnalyzeCctvFrameInputSchema = z.object({
   videoFrame: z
@@ -44,11 +44,13 @@ const analyzeCctvFramePrompt = ai.definePrompt({
   name: 'analyzeCctvFramePrompt',
   input: { schema: AnalyzeCctvFrameInputSchema },
   output: { schema: AnalyzeCctvFrameOutputSchema },
-  prompt: `You are a security AI analyzing a CCTV video frame. Your task is to count the people and determine the crowd density level.
+  prompt: `You are a sophisticated AI surveillance system. Your primary function is to accurately count the number of individuals in a given video frame.
 
-Analyze the image provided. Count the number of people visible.
+Perform a systematic analysis of the image provided. Scan the image methodically from top to bottom, left to right. Identify every person, even those in challenging conditions such as poor lighting, partial obstruction, or unusual poses.
 
-Based on the people count and the provided thresholds, determine the density level:
+Your final output for 'peopleCount' must be the most accurate count possible.
+
+After determining the precise people count, use the provided thresholds to determine the density level:
 - Normal: Less than the medium threshold.
 - Caution: Between medium and high thresholds.
 - Warning: Between high and critical thresholds.
@@ -59,7 +61,7 @@ Thresholds:
 - High: {{{thresholds.high}}}
 - Critical: {{{thresholds.critical}}}
 
-Finally, generate a short, one-sentence alert message appropriate for the determined density level.
+Finally, generate a concise, one-sentence alert message that is appropriate for the determined density level and the exact people count.
 
 Image: {{media url=videoFrame}}`,
 });
