@@ -16,6 +16,9 @@ import {
   summarizeCrowdBehavior,
   SummarizeCrowdBehaviorOutput,
 } from '@/ai/flows/summarize-crowd-behavior';
+import {
+    analyzeCrowdVideo,
+} from '@/ai/flows/analyze-crowd-video';
 import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,6 +92,39 @@ export default function DashboardClient() {
     setUploadOpen(false);
   };
 
+  const handleAnalyzeCrowd = async (videoFrame: string) => {
+    toast({
+      title: 'Analyzing Crowd',
+      description: 'Please wait while we analyze the video frame.',
+    });
+    try {
+      const result = await analyzeCrowdVideo({ videoFrame });
+      toast({
+        title: 'Analysis Complete',
+        description: (
+          <div>
+            <p>
+              <strong>People Count:</strong> {result.peopleCount}
+            </p>
+            <p>
+              <strong>Estimated Area:</strong> {result.estimatedArea} m²
+            </p>
+            <p>
+              <strong>Analysis:</strong> {result.analysis}
+            </p>
+          </div>
+        ),
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Analysis Failed',
+        description: 'Could not analyze the video frame.',
+      });
+      console.error(error);
+    }
+  };
+
   return (
     <>
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
@@ -118,7 +154,7 @@ export default function DashboardClient() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <VideoFeed videoUrl={videoUrl} />
+          <VideoFeed videoUrl={videoUrl} onAnalyze={handleAnalyzeCrowd} />
         </div>
         <ControlPanel
           threshold={densityThreshold}
