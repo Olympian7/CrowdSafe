@@ -87,7 +87,7 @@ export default function DashboardClient() {
 
     toast({
         title: 'Upload Successful',
-        description: `${file.name} is now being displayed.`,
+        description: `Processing ${file.name} for analysis.`,
     });
     setUploadOpen(false);
   };

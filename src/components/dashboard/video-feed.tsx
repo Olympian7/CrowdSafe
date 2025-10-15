@@ -1,16 +1,13 @@
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
 
 const videoFeedImage = PlaceHolderImages.find(
   img => img.id === 'video-feed-1'
@@ -24,11 +21,16 @@ type VideoFeedProps = {
 export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
   const isLive = !videoUrl;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const hasAnalyzed = useRef(false);
 
-  const handleAnalysisClick = () => {
-    if (videoRef.current) {
-      setIsAnalyzing(true);
+  useEffect(() => {
+    // Reset analysis state when videoUrl changes
+    hasAnalyzed.current = false;
+  }, [videoUrl]);
+
+  const handleVideoLoaded = () => {
+    if (videoRef.current && !hasAnalyzed.current) {
+      hasAnalyzed.current = true;
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
@@ -38,7 +40,6 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
         const dataUrl = canvas.toDataURL('image/jpeg');
         onAnalyze(dataUrl);
       }
-      setIsAnalyzing(false);
     }
   };
 
@@ -70,6 +71,7 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
               muted
               className="h-full w-full object-cover"
               crossOrigin="anonymous"
+              onLoadedData={handleVideoLoaded}
             />
           ) : (
             videoFeedImage && (
@@ -85,18 +87,6 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
           )}
         </div>
       </CardContent>
-      {!isLive && (
-        <CardFooter>
-          <Button
-            onClick={handleAnalysisClick}
-            disabled={isAnalyzing}
-            className="w-full"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            {isAnalyzing ? 'Analyzing...' : 'Analyze Crowd'}
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 }
