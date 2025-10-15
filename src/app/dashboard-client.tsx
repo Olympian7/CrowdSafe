@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { VideoFeed } from '@/components/dashboard/video-feed';
+import { useState, useEffect } from 'react';
 import { StatCard } from '@/components/dashboard/stat-card';
-import { ControlPanel } from '@/components/dashboard/control-panel';
 import { DensityChart } from '@/components/dashboard/density-chart';
 import { ObjectTracking } from '@/components/dashboard/object-tracking';
-import { UploadDialog } from '@/components/dashboard/upload-dialog';
 import {
   summarizeCrowdBehavior,
   SummarizeCrowdBehaviorOutput,
 } from '@/ai/flows/summarize-crowd-behavior';
+import { Users, AlertTriangle, Shield } from 'lucide-react';
 import {
-    analyzeCrowdVideo,
-} from '@/ai/flows/analyze-crowd-video';
-import { Users, AlertTriangle, Shield, Maximize } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useDebounce } from '@/hooks/use-debounce';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export type AlertStatus = 'Normal' | 'Caution' | 'Warning' | 'Critical';
 
@@ -29,63 +29,15 @@ const objectTrackingData = JSON.stringify([
     { id: 3, timestamps: [{ t: 0, x: 100, y: 120 }, { t: 5, x: 100, y: 125 }] },
 ]);
 
-type AdjustAlertThresholdsOutput = {
-  alertMessage: string;
-  crowdStatusLevel: AlertStatus;
-}
-
+const avatarImage = PlaceHolderImages.find(img => img.id === 'user-avatar-1');
 
 export default function DashboardClient() {
-  const [currentDensity, setCurrentDensity] = useState(45);
-  const [densityThreshold, setDensityThreshold] = useState(60);
-  const debouncedDensityThreshold = useDebounce(densityThreshold, 500);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [estimatedArea, setEstimatedArea] = useState(0);
-  const [alertInfo, setAlertInfo] = useState<AdjustAlertThresholdsOutput>({
-    alertMessage: 'System is operating normally.',
-    crowdStatusLevel: 'Normal',
-  });
   const [behaviorSummary, setBehaviorSummary] =
     useState<SummarizeCrowdBehaviorOutput>({
       summary: 'Analyzing crowd behavior...',
       riskAreas: [],
       commonMovementFlows: [],
     });
-  const [isLoadingAlert, setIsLoadingAlert] = useState(true);
-  const [isUploadOpen, setUploadOpen] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setIsLoadingAlert(true);
-    const getAlerts = () => {
-        let crowdStatusLevel: AlertStatus;
-        let alertMessage: string;
-
-        if (currentDensity < debouncedDensityThreshold - 25) {
-            crowdStatusLevel = 'Normal';
-            alertMessage = `Crowd density is low (${currentDensity}%), well below the threshold.`;
-        } else if (currentDensity < debouncedDensityThreshold) {
-            crowdStatusLevel = 'Caution';
-            alertMessage = `Crowd density is at ${currentDensity}%, approaching the threshold of ${debouncedDensityThreshold}%.`;
-        } else if (currentDensity < debouncedDensityThreshold + 25) {
-            crowdStatusLevel = 'Warning';
-            alertMessage = `Warning: Crowd density is at ${currentDensity}%, exceeding the threshold of ${debouncedDensityThreshold}%.`;
-        } else {
-            crowdStatusLevel = 'Critical';
-            alertMessage = `Critical Alert: Crowd density is high at ${currentDensity}%, significantly above the threshold.`;
-        }
-
-        setAlertInfo({ crowdStatusLevel, alertMessage });
-        setIsLoadingAlert(false);
-    };
-
-    const timer = setTimeout(getAlerts, 500); 
-
-    return () => clearTimeout(timer);
-  }, [currentDensity, debouncedDensityThreshold]);
-
 
   useEffect(() => {
     async function getSummary() {
@@ -95,148 +47,58 @@ export default function DashboardClient() {
     getSummary();
   }, []);
 
-  const handleFileUpload = (file: File) => {
-    const url = URL.createObjectURL(file);
-    if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null;
-    }
-    setVideoUrl(url);
-    setHasCameraPermission(true); 
-
-    toast({
-        title: 'Upload Successful',
-        description: `Processing ${file.name} for analysis.`,
-    });
-    setUploadOpen(false);
-  };
-
-  const handleAnalyzeCrowd = async (videoFrame: string) => {
-    toast({
-      title: 'Analyzing Crowd',
-      description: 'Please wait while we analyze the video frame.',
-    });
-    try {
-      const result = await analyzeCrowdVideo({ videoFrame });
-      setEstimatedArea(result.estimatedArea);
-      toast({
-        title: 'Analysis Complete',
-        description: (
-          <div>
-            <p>
-              <strong>People Count:</strong> {result.peopleCount}
-            </p>
-            <p>
-              <strong>Estimated Area:</strong> {result.estimatedArea} m²
-            </p>
-            <p>
-              <strong>Analysis:</strong> {result.analysis}
-            </p>
-          </div>
-        ),
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Analysis Failed',
-        description: 'Could not analyze the video frame.',
-      });
-      console.error(error);
-    }
-  };
-
-  const handleLiveFeedClick = () => {
-    if (videoUrl) {
-        URL.revokeObjectURL(videoUrl);
-        setVideoUrl(null);
-    }
-    // Let the useEffect handle camera permission
-    setHasCameraPermission(null);
-  };
-
-  useEffect(() => {
-    const getCameraPermission = async () => {
-      if (videoUrl === null && hasCameraPermission === null) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          setHasCameraPermission(true);
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (error) {
-          console.error('Error accessing camera:', error);
-          setHasCameraPermission(false);
-          toast({
-            variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings to use the live feed.',
-          });
-        }
-      }
-    };
-
-    getCameraPermission();
-
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [videoUrl, hasCameraPermission, toast]);
-
-
   return (
     <>
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <DashboardHeader onUploadClick={() => setUploadOpen(true)} onLiveFeedClick={handleLiveFeedClick} />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <header className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <SidebarTrigger className="md:hidden" />
+                <div>
+                <h1 className="text-2xl font-bold tracking-tight">
+                    CrowdSafe Dashboard
+                </h1>
+                <Breadcrumb className="hidden md:flex">
+                    <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                    </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+                </div>
+            </div>
+            <div className="flex items-center gap-4">
+                {avatarImage && (
+                <Image
+                    src={avatarImage.imageUrl}
+                    alt={avatarImage.description}
+                    width={40}
+                    height={40}
+                    data-ai-hint={avatarImage.imageHint}
+                    className="rounded-full"
+                />
+                )}
+            </div>
+        </header>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Current Density"
-          value={`${currentDensity}%`}
+          value={`45%`}
           icon={<Users className="text-accent-foreground" />}
         />
         <StatCard
           title="Crowd Status"
-          value={alertInfo.crowdStatusLevel}
+          value='Caution'
           icon={<Shield className="text-accent-foreground" />}
-          status={alertInfo.crowdStatusLevel as AlertStatus}
-        />
-        <StatCard
-          title="Estimated Area"
-          value={`${estimatedArea} m²`}
-          icon={<Maximize className="text-accent-foreground" />}
+          status='Caution'
         />
         <StatCard
           title="Risk Areas"
           value={behaviorSummary.riskAreas.length}
           icon={<AlertTriangle className="text-accent-foreground" />}
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <VideoFeed 
-            videoUrl={videoUrl} 
-            onAnalyze={handleAnalyzeCrowd} 
-            videoRef={videoRef}
-            hasCameraPermission={hasCameraPermission}
-          />
-          {hasCameraPermission === false && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertTitle>Camera Access Required</AlertTitle>
-              <AlertDescription>
-                Please allow camera access to use this feature. You may need to refresh the page after granting permissions.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-        <ControlPanel
-          threshold={densityThreshold}
-          onThresholdChange={setDensityThreshold}
-          alertMessage={alertInfo.alertMessage}
-          crowdStatus={alertInfo.crowdStatusLevel as AlertStatus}
-          isLoading={isLoadingAlert}
         />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
@@ -250,11 +112,6 @@ export default function DashboardClient() {
         </div>
       </div>
     </div>
-    <UploadDialog
-        isOpen={isUploadOpen}
-        onOpenChange={setUploadOpen}
-        onFileUpload={handleFileUpload}
-      />
     </>
   );
 }
