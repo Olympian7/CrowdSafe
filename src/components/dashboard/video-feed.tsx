@@ -49,6 +49,8 @@ export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
     }
   };
 
+  const showVideoPlayer = videoUrl || videoRef.current?.srcObject;
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -70,19 +72,17 @@ export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
         <div className="aspect-video overflow-hidden rounded-lg border">
           <video
             ref={videoRef}
-            src={videoUrl || ''}
+            src={videoUrl ?? undefined}
             loop={!!videoUrl} // Only loop uploaded videos
             muted
-            autoPlay
+            autoPlay={!!videoUrl} // Only autoplay uploaded videos
             controls
             className="h-full w-full object-cover"
             crossOrigin="anonymous"
-
-            // Use onLoadedData for uploaded videos
             onLoadedData={videoUrl ? handleCanPlay : undefined}
-            style={{ display: videoUrl || videoRef.current?.srcObject ? 'block' : 'none' }}
+            style={{ display: showVideoPlayer ? 'block' : 'none' }}
            />
-          {!videoUrl && !videoRef.current?.srcObject && videoFeedImage && (
+          {!showVideoPlayer && videoFeedImage && (
             <Image
               src={videoFeedImage.imageUrl}
               alt={videoFeedImage.description}

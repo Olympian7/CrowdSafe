@@ -77,6 +77,11 @@ export default function DashboardClient() {
 
   const handleFileUpload = (file: File) => {
     const url = URL.createObjectURL(file);
+    if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+    }
     setVideoUrl(url);
     setHasCameraPermission(null); // Reset camera permission when file is uploaded
 
@@ -121,12 +126,16 @@ export default function DashboardClient() {
   };
 
   const handleLiveFeedClick = async () => {
-    setVideoUrl(null); // Switch to live feed
+    if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+        setVideoUrl(null);
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play(); // Start playing the live feed
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
