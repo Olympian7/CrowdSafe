@@ -25,6 +25,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Video, BarChart2, ShieldAlert, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DensityChart } from '@/components/dashboard/density-chart';
 
 const analysisData = [
   {
@@ -118,8 +119,8 @@ export default function AnalyticsClient() {
           status="Critical"
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Alerts per Video</CardTitle>
             <CardDescription>
@@ -138,39 +139,46 @@ export default function AnalyticsClient() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Analysis Details</CardTitle>
-                <CardDescription>
-                    Detailed breakdown of each video analysis.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Video Name</TableHead>
-                    <TableHead>Peak Density</TableHead>
-                    <TableHead>Alerts</TableHead>
-                    <TableHead>Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {analysisData.map((item) => (
-                    <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.videoName}</TableCell>
-                        <TableCell>{item.peakDensity}%</TableCell>
-                        <TableCell>{item.alertsTriggered}</TableCell>
-                        <TableCell>
-                            <Badge variant={statusColors[item.status] || 'default'}>{item.status}</Badge>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+        <div className="lg:col-span-2">
+            <DensityChart />
+        </div>
       </div>
+       <Card>
+        <CardHeader>
+            <CardTitle>Analysis Details</CardTitle>
+            <CardDescription>
+                Detailed breakdown of each video analysis.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead>Video Name</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Peak Density</TableHead>
+                <TableHead>Avg. Density</TableHead>
+                <TableHead>Alerts</TableHead>
+                <TableHead>Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {analysisData.map((item) => (
+                <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.videoName}</TableCell>
+                    <TableCell>{item.date}</TableCell>
+                    <TableCell>{item.peakDensity}%</TableCell>
+                    <TableCell>{item.averageDensity}%</TableCell>
+                    <TableCell>{item.alertsTriggered}</TableCell>
+                    <TableCell>
+                        <Badge variant={statusColors[item.status] || 'default'}>{item.status}</Badge>
+                    </TableCell>
+                </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
     </div>
   );
 }

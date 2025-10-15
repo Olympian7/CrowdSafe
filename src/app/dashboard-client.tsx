@@ -15,7 +15,7 @@ import {
 import {
     analyzeCrowdVideo,
 } from '@/ai/flows/analyze-crowd-video';
-import { Users, AlertTriangle, Route, Shield, Maximize } from 'lucide-react';
+import { Users, AlertTriangle, Shield, Maximize } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
