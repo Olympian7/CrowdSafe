@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { FileUp } from 'lucide-react';
+import { FileUp, Video } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,9 +16,10 @@ const avatarImage = PlaceHolderImages.find(img => img.id === 'user-avatar-1');
 
 type DashboardHeaderProps = {
     onUploadClick: () => void;
+    onLiveFeedClick: () => void;
 };
 
-export function DashboardHeader({ onUploadClick }: DashboardHeaderProps) {
+export function DashboardHeader({ onUploadClick, onLiveFeedClick }: DashboardHeaderProps) {
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -41,6 +42,10 @@ export function DashboardHeader({ onUploadClick }: DashboardHeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <Button onClick={onLiveFeedClick} variant="outline">
+            <Video />
+            Live Feed
+        </Button>
         <Button onClick={onUploadClick}>
           <FileUp />
           Upload Video

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { VideoFeed } from '@/components/dashboard/video-feed';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -19,9 +19,10 @@ import {
 import {
     analyzeCrowdVideo,
 } from '@/ai/flows/analyze-crowd-video';
-import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
+import { Users, AlertTriangle, Route, Shield, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 export type AlertStatus = 'Normal' | 'Caution' | 'Warning' | 'Critical';
@@ -49,6 +50,8 @@ export default function DashboardClient() {
     });
   const [isLoadingAlert, setIsLoadingAlert] = useState(true);
   const [isUploadOpen, setUploadOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,10 +74,11 @@ export default function DashboardClient() {
     }
     getSummary();
   }, []);
-  
+
   const handleFileUpload = (file: File) => {
     const url = URL.createObjectURL(file);
     setVideoUrl(url);
+    setHasCameraPermission(null); // Reset camera permission when file is uploaded
 
     toast({
         title: 'Upload Successful',
@@ -116,10 +120,30 @@ export default function DashboardClient() {
     }
   };
 
+  const handleLiveFeedClick = async () => {
+    setVideoUrl(null); // Switch to live feed
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions in your browser settings to use the live feed.',
+      });
+    }
+  };
+
+
   return (
     <>
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <DashboardHeader onUploadClick={() => setUploadOpen(true)} />
+      <DashboardHeader onUploadClick={() => setUploadOpen(true)} onLiveFeedClick={handleLiveFeedClick} />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Current Density"
@@ -145,7 +169,15 @@ export default function DashboardClient() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <VideoFeed videoUrl={videoUrl} onAnalyze={handleAnalyzeCrowd} />
+          <VideoFeed videoUrl={videoUrl} onAnalyze={handleAnalyzeCrowd} videoRef={videoRef} />
+          {hasCameraPermission === false && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Camera Access Required</AlertTitle>
+              <AlertDescription>
+                Please allow camera access to use this feature. You may need to refresh the page after granting permissions.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
         <ControlPanel
           threshold={densityThreshold}

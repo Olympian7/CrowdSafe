@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, RefObject } from 'react';
 import {
   Card,
   CardContent,
@@ -16,11 +16,11 @@ const videoFeedImage = PlaceHolderImages.find(
 type VideoFeedProps = {
   videoUrl: string | null;
   onAnalyze: (videoFrame: string) => void;
+  videoRef: RefObject<HTMLVideoElement>;
 };
 
-export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
+export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
   const isLive = !videoUrl;
-  const videoRef = useRef<HTMLVideoElement>(null);
   const hasAnalyzed = useRef(false);
 
   useEffect(() => {
@@ -29,19 +29,22 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
   }, [videoUrl]);
 
   const handleCanPlay = () => {
-    if (videoRef.current && !hasAnalyzed.current) {
+    const videoElement = videoRef.current;
+    if (videoElement && !hasAnalyzed.current && videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
       hasAnalyzed.current = true;
-      // Ensure video is seekable and has data
-      if (videoRef.current.readyState >= 1) { // 1: HAVE_METADATA is enough
-        const canvas = document.createElement('canvas');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg');
-          onAnalyze(dataUrl);
-        }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Seek to beginning to capture the first frame
+        videoElement.currentTime = 0;
+        setTimeout(() => {
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            onAnalyze(dataUrl);
+        }, 100); // Small delay to ensure frame is drawn
       }
     }
   };
@@ -65,28 +68,29 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="aspect-video overflow-hidden rounded-lg border">
-          {videoUrl ? (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              loop
-              muted
-              controls
+          <video
+            ref={videoRef}
+            src={videoUrl || ''}
+            loop={!!videoUrl} // Only loop uploaded videos
+            muted
+            autoPlay
+            controls
+            className="h-full w-full object-cover"
+            crossOrigin="anonymous"
+
+            // Use onLoadedData for uploaded videos
+            onLoadedData={videoUrl ? handleCanPlay : undefined}
+            style={{ display: videoUrl || videoRef.current?.srcObject ? 'block' : 'none' }}
+           />
+          {!videoUrl && !videoRef.current?.srcObject && videoFeedImage && (
+            <Image
+              src={videoFeedImage.imageUrl}
+              alt={videoFeedImage.description}
+              width={1280}
+              height={720}
+              data-ai-hint={videoFeedImage.imageHint}
               className="h-full w-full object-cover"
-              crossOrigin="anonymous"
-              onCanPlay={handleCanPlay}
             />
-          ) : (
-            videoFeedImage && (
-              <Image
-                src={videoFeedImage.imageUrl}
-                alt={videoFeedImage.description}
-                width={1280}
-                height={720}
-                data-ai-hint={videoFeedImage.imageHint}
-                className="h-full w-full object-cover"
-              />
-            )
           )}
         </div>
       </CardContent>
