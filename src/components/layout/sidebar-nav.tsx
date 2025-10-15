@@ -49,41 +49,33 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard" passHref>
-              <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
-                <>
-                  <Home />
-                  Dashboard
-                </>
+              <SidebarMenuButton isActive={pathname === '/dashboard'}>
+                <Home />
+                Dashboard
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="/cctv" passHref>
-              <SidebarMenuButton asChild isActive={pathname === '/cctv'}>
-                <>
-                  <MonitorPlay />
-                  CCTV Footage
-                </>
+              <SidebarMenuButton isActive={pathname === '/cctv'}>
+                <MonitorPlay />
+                CCTV Footage
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="/analytics" passHref>
-              <SidebarMenuButton asChild isActive={pathname === '/analytics'}>
-                <>
-                  <BarChart3 />
-                  Analytics
-                </>
+              <SidebarMenuButton isActive={pathname === '/analytics'}>
+                <BarChart3 />
+                Analytics
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="/settings" passHref>
-              <SidebarMenuButton asChild isActive={pathname === '/settings'}>
-                <>
-                  <Settings />
-                  Settings
-                </>
+              <SidebarMenuButton isActive={pathname === '/settings'}>
+                <Settings />
+                Settings
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -94,16 +86,14 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/profile" passHref>
-              <SidebarMenuButton asChild isActive={pathname === '/profile'}>
-                <>
-                  <UserCircle />
-                  Profile
-                </>
+              <SidebarMenuButton isActive={pathname === '/profile'}>
+                <UserCircle />
+                Profile
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => handleActionClick('Logout')}>
+            <SidebarMenuButton onClick={() => handleActionClick('Logout')}>
               <LogOut />
               Logout
             </SidebarMenuButton>
