@@ -48,8 +48,8 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              href="/"
-              isActive={pathname === '/'}
+              href="/dashboard"
+              isActive={pathname === '/dashboard'}
             >
               <Home />
               Dashboard
@@ -62,13 +62,13 @@ export function SidebarNav() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Analytics' })}>
+            <SidebarMenuButton href="/analytics" isActive={pathname === '/analytics'}>
               <BarChart3 />
               Analytics
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Settings' })}>
+            <SidebarMenuButton href="/settings" isActive={pathname === '/settings'}>
               <Settings />
               Settings
             </SidebarMenuButton>
@@ -79,7 +79,7 @@ export function SidebarNav() {
         <Separator className="mb-2" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" onClick={() => toast({ title: 'Navigating to Profile' })}>
+            <SidebarMenuButton href="/profile" isActive={pathname === '/profile'}>
               <UserCircle />
               Profile
             </SidebarMenuButton>
