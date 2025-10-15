@@ -58,10 +58,7 @@ Here are the crowd density levels based on the crowdDensityThreshold:
 Current Crowd Density: {{{currentCrowdDensity}}}
 Crowd Density Threshold: {{{crowdDensityThreshold}}}
 
-Based on the crowd status level, construct an alert message to display to the user.
-
-Output in JSON format:
-{{ zodFormat=AdjustAlertThresholdsOutputSchema }}`,
+Based on the crowd status level, construct an alert message to display to the user.`,
 });
 
 const adjustAlertThresholdsFlow = ai.defineFlow(
