@@ -19,7 +19,7 @@ import {
 import {
     analyzeCrowdVideo,
 } from '@/ai/flows/analyze-crowd-video';
-import { Users, AlertTriangle, Route, Shield, Video } from 'lucide-react';
+import { Users, AlertTriangle, Route, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -83,7 +83,7 @@ export default function DashboardClient() {
         videoRef.current.srcObject = null;
     }
     setVideoUrl(url);
-    setHasCameraPermission(null); // Reset camera permission when file is uploaded
+    setHasCameraPermission(true); 
 
     toast({
         title: 'Upload Successful',
@@ -125,28 +125,47 @@ export default function DashboardClient() {
     }
   };
 
-  const handleLiveFeedClick = async () => {
+  const handleLiveFeedClick = () => {
     if (videoUrl) {
         URL.revokeObjectURL(videoUrl);
         setVideoUrl(null);
     }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasCameraPermission(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play(); // Start playing the live feed
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings to use the live feed.',
-      });
-    }
+    // Let the useEffect handle camera permission
+    setHasCameraPermission(null);
   };
+
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      // Only request permission if no video is uploaded and permission isn't already known
+      if (videoUrl === null && hasCameraPermission === null) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setHasCameraPermission(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+          toast({
+            variant: 'destructive',
+            title: 'Camera Access Denied',
+            description: 'Please enable camera permissions in your browser settings to use the live feed.',
+          });
+        }
+      }
+    };
+
+    getCameraPermission();
+
+    // Cleanup function to stop camera stream
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [videoUrl, hasCameraPermission, toast]);
 
 
   return (
@@ -178,7 +197,12 @@ export default function DashboardClient() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <VideoFeed videoUrl={videoUrl} onAnalyze={handleAnalyzeCrowd} videoRef={videoRef} />
+          <VideoFeed 
+            videoUrl={videoUrl} 
+            onAnalyze={handleAnalyzeCrowd} 
+            videoRef={videoRef}
+            hasCameraPermission={hasCameraPermission}
+          />
           {hasCameraPermission === false && (
             <Alert variant="destructive" className="mt-4">
               <AlertTitle>Camera Access Required</AlertTitle>

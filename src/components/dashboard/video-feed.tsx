@@ -17,9 +17,10 @@ type VideoFeedProps = {
   videoUrl: string | null;
   onAnalyze: (videoFrame: string) => void;
   videoRef: RefObject<HTMLVideoElement>;
+  hasCameraPermission: boolean | null;
 };
 
-export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
+export function VideoFeed({ videoUrl, onAnalyze, videoRef, hasCameraPermission }: VideoFeedProps) {
   const isLive = !videoUrl;
   const hasAnalyzed = useRef(false);
 
@@ -30,7 +31,7 @@ export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
 
   const handleCanPlay = () => {
     const videoElement = videoRef.current;
-    if (videoElement && !hasAnalyzed.current && videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
+    if (videoElement && !hasAnalyzed.current) { 
       hasAnalyzed.current = true;
       
       const canvas = document.createElement('canvas');
@@ -40,16 +41,21 @@ export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
       if (ctx) {
         // Seek to beginning to capture the first frame
         videoElement.currentTime = 0;
+        // A short timeout can help ensure the frame is ready to be drawn
         setTimeout(() => {
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/jpeg');
             onAnalyze(dataUrl);
-        }, 100); // Small delay to ensure frame is drawn
+            // After analysis, we can play the uploaded video
+            if(videoUrl) videoElement.play();
+        }, 200); 
       }
     }
   };
 
-  const showVideoPlayer = videoUrl || videoRef.current?.srcObject;
+  const showVideoPlayer = videoUrl || (videoRef.current?.srcObject && hasCameraPermission);
+  const isLiveFeedActive = videoRef.current?.srcObject && !videoUrl;
+
 
   return (
     <Card className="h-full flex flex-col">
@@ -75,11 +81,11 @@ export function VideoFeed({ videoUrl, onAnalyze, videoRef }: VideoFeedProps) {
             src={videoUrl ?? undefined}
             loop={!!videoUrl} // Only loop uploaded videos
             muted
-            autoPlay={!!videoUrl} // Only autoplay uploaded videos
+            autoPlay={isLiveFeedActive} // Autoplay only for live feed
             controls
             className="h-full w-full object-cover"
             crossOrigin="anonymous"
-            onLoadedData={videoUrl ? handleCanPlay : undefined}
+            onCanPlay={videoUrl ? handleCanPlay : undefined}
             style={{ display: showVideoPlayer ? 'block' : 'none' }}
            />
           {!showVideoPlayer && videoFeedImage && (
