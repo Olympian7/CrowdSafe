@@ -4,7 +4,7 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AnalyticsClient from './analytics-client';
 
 export default function AnalyticsPage() {
   return (
@@ -13,16 +13,7 @@ export default function AnalyticsPage() {
         <SidebarNav />
       </Sidebar>
       <SidebarInset>
-        <div className="flex-1 p-4 md:p-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>This is the Analytics page. Content coming soon!</p>
-            </CardContent>
-          </Card>
-        </div>
+        <AnalyticsClient />
       </SidebarInset>
     </SidebarProvider>
   );
