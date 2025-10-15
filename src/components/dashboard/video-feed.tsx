@@ -28,17 +28,20 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
     hasAnalyzed.current = false;
   }, [videoUrl]);
 
-  const handleVideoLoaded = () => {
+  const handleCanPlay = () => {
     if (videoRef.current && !hasAnalyzed.current) {
       hasAnalyzed.current = true;
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        onAnalyze(dataUrl);
+      // Ensure video is seekable and has data
+      if (videoRef.current.readyState >= 2) {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg');
+          onAnalyze(dataUrl);
+        }
       }
     }
   };
@@ -66,12 +69,12 @@ export function VideoFeed({ videoUrl, onAnalyze }: VideoFeedProps) {
             <video
               ref={videoRef}
               src={videoUrl}
-              autoPlay
               loop
               muted
+              controls
               className="h-full w-full object-cover"
               crossOrigin="anonymous"
-              onLoadedData={handleVideoLoaded}
+              onCanPlay={handleCanPlay}
             />
           ) : (
             videoFeedImage && (
