@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { PeopleCountChart } from '@/components/cctv/people-count-chart';
-import { Upload, Play, Pause, StopCircle, Users, Signal, ShieldAlert, ScanLine } from 'lucide-react';
+import { Upload, Play, Pause, StopCircle, Users, Signal, ShieldAlert, ScanLine, Loader } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeCctvFrame, AnalyzeCctvFrameOutput } from '@/ai/flows/analyze-cctv-frame';
 import { Slider } from '@/components/ui/slider';
@@ -50,6 +50,7 @@ export default function CctvClient() {
     high: 25,
     critical: 40,
   });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,13 +88,17 @@ export default function CctvClient() {
         });
         return;
     }
+    setIsAnalyzing(true);
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        setIsAnalyzing(false);
+        return;
+    }
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const frameDataUrl = canvas.toDataURL('image/jpeg');
@@ -118,6 +123,8 @@ export default function CctvClient() {
         title: 'Analysis Failed',
         description: 'Could not analyze the video frame.',
       });
+    } finally {
+        setIsAnalyzing(false);
     }
   }, [thresholds, toast]);
 
@@ -185,8 +192,9 @@ export default function CctvClient() {
                   <StopCircle className="mr-2 h-4 w-4" /> Stop
                 </Button>
               </div>
-              <Button onClick={handleAnalyzeFrame} disabled={!videoUrl}>
-                <ScanLine className="mr-2 h-4 w-4" /> Analyze Frame
+              <Button onClick={handleAnalyzeFrame} disabled={!videoUrl || isAnalyzing}>
+                {isAnalyzing ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
+                 {isAnalyzing ? 'Analyzing...' : 'Analyze Frame'}
               </Button>
             </CardContent>
           </Card>
@@ -237,5 +245,3 @@ export default function CctvClient() {
     </div>
   );
 }
-
-    
