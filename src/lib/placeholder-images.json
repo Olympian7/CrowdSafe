@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "video-feed-1",
+      "description": "A placeholder for the live video feed showing a crowd.",
+      "imageUrl": "https://picsum.photos/seed/crowd1/1280/720",
+      "imageHint": "crowd street"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "User avatar",
+      "imageUrl": "https://picsum.photos/seed/avatar1/40/40",
+      "imageHint": "person face"
+    }
+  ]
 }
