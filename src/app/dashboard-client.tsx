@@ -31,6 +31,7 @@ const objectTrackingData = JSON.stringify([
 export default function DashboardClient() {
   const [currentDensity, setCurrentDensity] = useState(45);
   const [densityThreshold, setDensityThreshold] = useState(60);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [alertInfo, setAlertInfo] = useState<AdjustAlertThresholdsOutput>({
     alertMessage: 'Loading...',
     crowdStatusLevel: 'Normal',
@@ -78,9 +79,12 @@ export default function DashboardClient() {
   }, []);
   
   const handleFileUpload = (file: File) => {
+    const url = URL.createObjectURL(file);
+    setVideoUrl(url);
+
     toast({
         title: 'Upload Successful',
-        description: `${file.name} has been uploaded for processing.`,
+        description: `${file.name} is now being displayed.`,
     });
     setUploadOpen(false);
   };
@@ -114,7 +118,7 @@ export default function DashboardClient() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <VideoFeed />
+          <VideoFeed videoUrl={videoUrl} />
         </div>
         <ControlPanel
           threshold={densityThreshold}
