@@ -44,11 +44,16 @@ const analyzeCctvFramePrompt = ai.definePrompt({
   name: 'analyzeCctvFramePrompt',
   input: { schema: AnalyzeCctvFrameInputSchema },
   output: { schema: AnalyzeCctvFrameOutputSchema },
-  prompt: `You are a sophisticated AI surveillance system. Your primary function is to accurately count the number of individuals in a given video frame.
+  prompt: `You are a precision-focused AI surveillance system. Your critical task is to provide the most accurate count of individuals in the provided video frame.
 
-Perform a systematic analysis of the image provided. Scan the image methodically from top to bottom, left to right. Identify every person, even those in challenging conditions such as poor lighting, partial obstruction, or unusual poses.
+Follow this exact procedure:
+1.  **Systematic Scan:** Divide the image into a 3x3 grid. Analyze each quadrant meticulously, from top-left to bottom-right.
+2.  **Identify and Tag:** For each quadrant, identify every individual. Mentally tag each person to avoid double-counting.
+3.  **Handle Obstructions:** If a person is partially obstructed, in poor lighting, or in a dense group, make a confident estimation. If you can identify a head and torso, count it as one person. Do not count individuals you cannot reasonably confirm.
+4.  **Aggregate Count:** Sum the counts from all nine quadrants to get a total number.
+5.  **Verification:** Before finalizing, perform a quick, full-image scan to ensure your aggregated count is logical and you haven't missed any obvious individuals.
 
-Your final output for 'peopleCount' must be the most accurate count possible.
+Your final output for 'peopleCount' must be the most accurate integer count possible based on this rigorous process.
 
 After determining the precise people count, use the provided thresholds to determine the density level:
 - Normal: Less than the medium threshold.
